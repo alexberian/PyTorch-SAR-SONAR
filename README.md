@@ -78,7 +78,13 @@ on srncars cars and ShapeNet meshes; see its README.
 If you use this in your research, please cite:
 
 ```bibtex
-TODO
+@article{berian2026sarsonar,
+  title   = {Open-Source {SAR} and Sonar Simulator in {PyTorch} Via Interposummation},
+  author  = {Berian, Alex and Bal, Sehajdeep Singh and Wu, JhihYang and Brignac, Daniel and Mahalanobis, Abhijit},
+  journal = {Sensors},
+  year    = {2026},
+  note    = {Under review}
+}
 ```
 
 ## License
