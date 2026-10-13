@@ -1,0 +1,8 @@
+__pycache__/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+*.png
+*.npy
+!docs/*.png

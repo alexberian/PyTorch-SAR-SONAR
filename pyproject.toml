@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytorch-sar-sonar"
+dynamic = ["version"]
+description = "Ray traced SAR, side scan sonar and forward looking sonar images of .obj meshes in PyTorch"
+readme = "README.md"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Alex Berian", email = "berian@arizona.edu" }]
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=2.0",
+    "numpy",
+    "pillow",
+]
+keywords = ["sar", "sonar", "side-scan", "ray-tracing", "simulation", "pytorch", "synthetic-aperture-radar"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+sarsonar = "sarsonar.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "sarsonar.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
