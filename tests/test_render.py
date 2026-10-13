@@ -30,6 +30,16 @@ def test_render(mesh, modality):
     assert gray.dtype == np.uint8 and gray.max() == 255
 
 
+def test_sar_return_pulses(mesh):
+    pose = sarsonar.pose_matrix(20.0, 40.0, 1.3, device=mesh.device).reshape(1, 4, 4)
+    image, pulses = sarsonar.sar_image(mesh, pose, return_pulses=True, **SMALL['sar'])
+    torch.testing.assert_close(image, sarsonar.sar_image(mesh, pose, **SMALL['sar']), rtol=0, atol=0)
+    assert pulses['signals'].shape[:2] == (1, 8)
+    maps = pulses['first_bounce_maps'][(0, 4)]
+    assert maps['depth'].shape == maps['energy'].shape == (32, 32)
+    assert (maps['depth'] > 0).all()  # the ground plane catches every ray
+
+
 def test_render_from_path_is_deterministic(device):
     a = sarsonar.render_fls(SPHERE, device=device, **SMALL['fls'])
     b = sarsonar.render_fls(SPHERE, device=device, **SMALL['fls'])

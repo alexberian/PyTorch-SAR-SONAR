@@ -6,3 +6,5 @@ dist/
 *.png
 *.npy
 !docs/*.png
+experiments/figures/
+experiments/data/

@@ -26,6 +26,7 @@ classifiers = [
 
 [project.optional-dependencies]
 test = ["pytest"]
+experiments = ["matplotlib"]
 
 [project.scripts]
 sarsonar = "sarsonar.cli:main"

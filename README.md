@@ -68,6 +68,11 @@ pytest
 `tests/test_golden.py` checks the scatter accumulators against fingerprints recorded from the
 implementation the paper's figures were rendered with.
 
+## Reproducing the paper
+
+[`experiments/`](experiments) holds the scripts behind every figure and table in the paper. They run
+on srncars cars and ShapeNet meshes; see its README.
+
 ## Citation
 
 If you use this in your research, please cite:

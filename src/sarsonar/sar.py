@@ -140,15 +140,19 @@ def sar_image(mesh, poses,
         cbp_batch_size (int): pixels per pass under sinc interpolation
         ray_batch_size (int): rays per ray tracing batch; halves itself on CUDA OOM
         octree (Octree): built once per mesh and passed back in when rendering many poses
-        return_pulses (bool): also return the per-pulse trajectory, scatters and signals
+        return_pulses (bool): also return the per-pulse trajectory, scatters, signals and
+            first-bounce maps
     outputs:
-        images (T,H,W) raw amplitude, or {algorithm: (T,H,W)}; plus a dict of pulses with return_pulses
+        images (T,H,W) raw amplitude, or {algorithm: (T,H,W)}
+        pulses (dict): only with return_pulses. trajectory (T,P,3); ranges and energies [T][P] of
+            (R',) round-trip scatters; signals and sample_z (T,P,Z); first_bounce_maps
+            (t,p) -> {'depth','energy'} (n_ray_height,n_ray_width), depth -1 where a ray missed
     '''
     true_trajectory, perceived_trajectory, cam_azimuth_deg = generate_trajectory(
         poses, trajectory_type=trajectory_type, n_pulses=num_pulses,
         azimuth_spread_deg=azimuth_spread_deg, trajectory_noise_var=trajectory_noise_var)
 
-    all_ranges, all_energies, _ = accumulate_scatters(
+    all_ranges, all_energies, first_bounce_maps = accumulate_scatters(
         mesh, true_trajectory,
         wavelength=wavelength,
         grid_width=grid_width,
@@ -157,6 +161,7 @@ def sar_image(mesh, poses,
         n_ray_height=n_ray_height,
         num_bounce=num_bounce,
         second_bounce_batch_size=ray_batch_size,
+        debug_gif=return_pulses,
         octree=octree,
     )  # [T][P] of (R',)
 
@@ -224,7 +229,7 @@ def sar_image(mesh, poses,
     image = images[imaging_algorithm] if one_algorithm else images
     if return_pulses:
         return image, dict(trajectory=true_trajectory, ranges=all_ranges, energies=all_energies,
-                           signals=signals, sample_z=sample_z)
+                           signals=signals, sample_z=sample_z, first_bounce_maps=first_bounce_maps)
     return image
 
 
