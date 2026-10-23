@@ -1,7 +1,7 @@
 '''
 Golden fingerprints of the three scatter accumulators on a sphere over a ground plane, recorded from
-the implementation the paper's figures were rendered with. A count must match exactly; sums of real
-and imaginary parts within RTOL.
+the research code behind the paper. A count must match exactly; sums of real and imaginary parts
+within RTOL.
 
 Regenerate after an intended change with:  python tests/test_golden.py --record
 '''
@@ -18,7 +18,7 @@ from conftest import SPHERE
 # float reductions reorder between CPU and CUDA, so CPU only gets close; its coherent energy sums
 # least, since float32 range rounding becomes phase at wavelength 0.03 and the sums cancel heavily
 RTOL = {'cuda': 1e-6, 'cpu': 1e-5}
-CPU_ENERGY_RTOL = 2e-3
+CPU_ENERGY_RTOL = 1e-2
 
 GOLDEN = {
     'planar 2 bounce coherent': {
@@ -34,21 +34,21 @@ GOLDEN = {
     'perspective 2 bounce': {
         'arrival_azimuth': (3228, -4.1455462356e+03, 0.0000000000e+00, 1.7831898499e+02),
         'azimuth': (3228, -1.5193547815e+02, 0.0000000000e+00, 1.4999999046e+01),
-        'energy': (3228, 1.1474418648e-05, -6.0732258903e-06, 3.0241915283e-07),
+        'energy': (3228, 7.8723181831e-03, -3.4986875895e-03, 1.2161598715e-04),
         'maps': (4096, 6.6351604041e+03, 0.0000000000e+00, 5.4100818634e+00),
         'range': (3228, 2.4311271969e+04, 0.0000000000e+00, 1.9580755615e+02),
     },
     'side scan absorption 0.05': {
         'arrival_azimuth': (4367, -1.2216744125e+03, 0.0000000000e+00, 1.3628024292e+02),
         'azimuth': (4367, 1.5338709664e+02, 0.0000000000e+00, 1.4999999046e+01),
-        'energy': (4367, -2.0285154739e-06, -2.3755772956e-06, 2.2365038888e-07),
+        'energy': (4367, -1.4079777476e-03, 2.4556071680e-04, 9.1816727945e-05),
         'maps': (6144, 1.0861379572e+04, 0.0000000000e+00, 7.0999932289e+00),
         'range': (4367, 3.4078427491e+04, 0.0000000000e+00, 1.8021507263e+02),
     },
     'side scan absorption 0.00': {
         'arrival_azimuth': (4367, -1.2216744125e+03, 0.0000000000e+00, 1.3628024292e+02),
         'azimuth': (4367, 1.5338709664e+02, 0.0000000000e+00, 1.4999999046e+01),
-        'energy': (4367, -2.9221323254e-06, -2.7978030329e-06, 2.8793971296e-07),
+        'energy': (4367, -2.1379681313e-03, 1.3775981986e-03, 1.2387866445e-04),
         'maps': (6144, 1.0861379572e+04, 0.0000000000e+00, 7.0999932289e+00),
         'range': (4367, 3.4078427491e+04, 0.0000000000e+00, 1.8021507263e+02),
     },

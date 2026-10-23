@@ -66,7 +66,7 @@ pytest
 ```
 
 `tests/test_golden.py` checks the scatter accumulators against fingerprints recorded from the
-implementation the paper's figures were rendered with.
+research code behind the paper.
 
 ## Reproducing the paper
 

@@ -153,7 +153,6 @@ def accumulate_scatters_from_rays(
         planar_wave=False,
         wavelength=None,
         num_bounce=1,
-        spherical_spread=False,
         attenuation=0.0,
         octree=None,
         second_bounce_batch_size=2**100,
@@ -181,8 +180,6 @@ def accumulate_scatters_from_rays(
             rather than a true distance. False treats the sensor as the finite point it is.
         wavelength (float): the wavelength of the radar signal, if none, there will be no complex value in the energy
         num_bounce (int): how many times each ray is allowed to reflect
-        spherical_spread (bool): True applies energy /= 4*pi * range**2 over the round-trip
-            range, spreading over the surface of the expanding sphere. False disables it.
         attenuation (float): absorption coefficient of the medium, in nepers per unit length
             (0 disables it). Applied over the round trip, so it is already the two-way loss.
             From the dB/m absorption is usually tabulated in: nepers = dB / 8.686.
@@ -197,8 +194,8 @@ def accumulate_scatters_from_rays(
     outputs:
         range (R',): round-trip path length of each surviving scatter, so ~2x the distance to
             the scatter on a first bounce. R' varies with how many rays hit and stayed visible
-        energy (R',): energy of each surviving scatter, after spreading loss, attenuation and
-            the wavelength phasor
+        energy (R',): energy of each surviving scatter, after attenuation and the wavelength
+            phasor
         position (R',3): where each surviving scatter sits in world space. Anything measured
             relative to a sensor pose -- azimuth off boresight, say -- is the caller's job
         ray_index (R',): which transmitted ray produced each scatter, indexing into the R
@@ -394,14 +391,6 @@ def accumulate_scatters_from_rays(
         prev_origins = hit_b_pos + surface_bias * n
 
         t_bounce_totals[b-1] += sync_time() - t_after_trace
-
-    # spreading loss: the energy of a point source thins over the surface of an expanding
-    # sphere. r is the scatter's full round-trip path length, so this attenuates far returns
-    # relative to near ones within the same pulse. A planar wavefront does not suffer it.
-    if spherical_spread:
-        scatter_energies = scatter_energies / (
-            4 * np.pi * scatter_ranges.clamp_min(1e-12)**2
-        )
 
     # medium absorption: exponential in path length, which here is already the round trip
     if attenuation:
@@ -613,8 +602,8 @@ def accumulate_scatters_perspective(mesh,
                                 ):
     '''
     Perspective wrapper around accumulate_scatters_from_rays: the sensor is a *point* rather
-    than an infinitely distant plane, so the rays fan out from it, ranges are true distances
-    to and from it, and the energies take a 1/(4*pi*r^2) spreading loss a planar wavefront does not.
+    than an infinitely distant plane, so the rays fan out from it and ranges are true distances
+    to and from it.
 
     The sensor pose is rebuilt from each position, which always aims boresight at the scene
     origin; use accumulate_scatters_side_scan when the look direction is given instead.
@@ -636,8 +625,7 @@ def accumulate_scatters_perspective(mesh,
     outputs:
         range (T,)[P,][R']: list of lists of 1-D tensors; R' varies per pulse (hit rays only).
             Round-trip path length, so ~2x the distance to the scatter on a first bounce
-        energy (T,)[P,][R']: list of lists of 1-D tensors; R' varies per pulse (hit rays only),
-            attenuated by the 1/(4*pi*r^2) spreading loss over that round-trip range
+        energy (T,)[P,][R']: list of lists of 1-D tensors; R' varies per pulse (hit rays only)
         azimuth (T,)[P,][R']: list of lists of 1-D tensors; the launch azimuth in degrees off
             boresight, positive toward the sensor's right vector, of the ray that produced
             each scatter. On a second bounce that is where the ray left, not where the
@@ -646,7 +634,7 @@ def accumulate_scatters_perspective(mesh,
             scatter, i.e. where the receiver hears it from. Equal to azimuth on a first bounce;
             this is the receive beam pattern's angle
         debugging_maps: dict (t,p) -> {'depth','energy'} of (H,W) maps, or None. The energy map
-            is the raw first-bounce energy, before the spreading loss and ray-count normalization
+            is the raw first-bounce energy, before the ray-count normalization
     '''
     device = trajectory.device
     T = trajectory.shape[0]  # no. of camera views
@@ -702,7 +690,6 @@ def accumulate_scatters_perspective(mesh,
                 ray_origins, ray_directions,
                 wavelength       = wavelength,
                 num_bounce       = num_bounce,
-                spherical_spread = True,
                 octree           = octree,
                 second_bounce_batch_size = second_bounce_batch_size,
                 surface_bias     = surface_bias,
@@ -749,7 +736,6 @@ def accumulate_scatters_side_scan(mesh,
                                   num_bounce = 1,
                                   second_bounce_batch_size = 2**100,
                                   surface_bias = 1e-3,
-                                  spherical_spread = True,
                                   water_absorption = 0.0,
                                   debug_gif = False,
                                   octree = None,
@@ -763,7 +749,7 @@ def accumulate_scatters_side_scan(mesh,
     flies a straight track staring off to one side -- so this wrapper takes the full pose matrix
     and reads the sensor axes straight out of its columns. Azimuths are therefore measured off
     a fixed boresight, so a scatter's azimuth tells you where it sits along the track rather
-    than always being ~0. It also lets the caller switch the spreading loss off.
+    than always being ~0. It also takes the water absorption the perspective wrapper leaves out.
 
     inputs:
         mesh (Mesh): the scene, with its face normals and r,a,i,d,s materials
@@ -776,9 +762,6 @@ def accumulate_scatters_side_scan(mesh,
         surface_bias (float): distance to push each bounce's outgoing ray origin off the surface
             along the normal, to prevent self-intersection (spurious leg~=0 re-hits). Should be
             small relative to scene features but large relative to float error at the scene scale.
-        spherical_spread (bool): True applies energy /= 4*pi * range**2 over the round trip,
-            spreading over the real surface of the expanding sphere; False disables the
-            spreading loss entirely
         water_absorption (float): absorption coefficient of the water, in nepers per unit length
             (0 disables it). Applied over the round trip, so it is already the two-way loss.
             From the dB/m absorption is usually tabulated in: nepers = dB / 8.686.
@@ -790,8 +773,7 @@ def accumulate_scatters_side_scan(mesh,
         range (T,)[P,][R']: list of lists of 1-D tensors; R' varies per ping (hit rays only).
             Round-trip path length, so ~2x the distance to the scatter on a first bounce
         energy (T,)[P,][R']: list of lists of 1-D tensors; R' varies per ping (hit rays only),
-            attenuated by the 1/(4*pi*r^2) spreading loss over that round-trip range when
-            spherical_spread is on, and by water absorption if enabled
+            attenuated by water absorption over that round-trip range if enabled
         azimuth (T,)[P,][R']: list of lists of 1-D tensors; the launch azimuth in degrees off
             the fixed boresight, positive toward the sensor's right vector (i.e. forward along
             track), of the ray that produced each scatter. On a second bounce that is where the
@@ -800,7 +782,7 @@ def accumulate_scatters_side_scan(mesh,
             scatter, i.e. where the receiver hears it from. Equal to azimuth on a first bounce;
             this is the receive beam pattern's angle
         debugging_maps: dict (t,p) -> {'depth','energy'} of (H,W) maps, or None. The energy map
-            is the raw first-bounce energy, before the spreading loss and ray-count normalization
+            is the raw first-bounce energy, before absorption and the ray-count normalization
     '''
     device = poses.device
     T = poses.shape[0]  # no. of scenes
@@ -855,7 +837,6 @@ def accumulate_scatters_side_scan(mesh,
                 ray_origins, ray_directions,
                 wavelength       = wavelength,
                 num_bounce       = num_bounce,
-                spherical_spread = spherical_spread,
                 attenuation      = water_absorption,
                 octree           = octree,
                 second_bounce_batch_size = second_bounce_batch_size,

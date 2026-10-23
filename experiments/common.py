@@ -230,7 +230,7 @@ def sonar_position(pose, elevation_deg=None, distance=None):
 SSS_KEYS = ('track_length', 'num_pings', 'elevation_fov_deg', 'azimuth_beam_width_deg',
             'num_ray_width', 'num_ray_height', 'image_width', 'image_height',
             'image_cross_range_swath', 'image_range_swath', 'wavelength', 'num_bounce',
-            'spherical_spread', 'water_absorption', 'tvg_exponent', 'spatial_bw', 'spatial_fs',
+            'water_absorption', 'tvg_exponent', 'spatial_bw', 'spatial_fs',
             'waveform', 'use_sig_magnitude')
 
 FLS_KEYS = ('image_azimuth_range', 'num_pings', 'num_range_values', 'ray_fov_az', 'ray_fov_el',

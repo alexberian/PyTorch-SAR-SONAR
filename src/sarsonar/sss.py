@@ -80,7 +80,6 @@ def side_scan_image(
 
     wavelength = None,
     num_bounce = 2,
-    spherical_spread = False,
     water_absorption = 0.0,
     tvg_exponent = 0.0,
     spatial_bw = 30,
@@ -110,7 +109,6 @@ def side_scan_image(
             distance to the origin
         wavelength (float): when given, scatter energies are complex and sum coherently
         num_bounce (int): reflections traced per ray
-        spherical_spread (bool): apply the 1/(4 pi R^2) spreading loss over the round trip
         water_absorption (float): two-way absorption in nepers per unit length, 0 = off
         tvg_exponent (float): time varying gain, signals multiplied by range^n, 0 = off
         spatial_bw (float): waveform bandwidth in cycles per unit range
@@ -179,7 +177,6 @@ def side_scan_image(
         n_ray_height   = num_ray_height,
         num_bounce     = num_bounce,
         second_bounce_batch_size = ray_batch_size,
-        spherical_spread = spherical_spread,
         water_absorption = water_absorption,
         octree         = octree,
     )  # list[T][P] of (R',) each
