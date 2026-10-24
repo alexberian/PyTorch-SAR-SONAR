@@ -235,7 +235,8 @@ SSS_KEYS = ('track_length', 'num_pings', 'elevation_fov_deg', 'azimuth_beam_widt
 
 FLS_KEYS = ('image_azimuth_range', 'num_pings', 'num_range_values', 'ray_fov_az', 'ray_fov_el',
             'azimuth_beam_width_deg', 'num_ray_width', 'num_ray_height', 'image_range_swath',
-            'wavelength', 'num_bounce', 'spatial_bw', 'spatial_fs', 'waveform', 'use_sig_magnitude')
+            'wavelength', 'num_bounce', 'water_absorption', 'tvg_exponent', 'spatial_bw', 'spatial_fs',
+            'waveform', 'use_sig_magnitude')
 
 
 def _sonar_view(b, device):

@@ -38,6 +38,8 @@ def fls_image(
 
     wavelength = None,
     num_bounce = 2,
+    water_absorption = 0.0,
+    tvg_exponent = 0.0,
     spatial_bw = 32,
     spatial_fs = 64,
     waveform = 'gaussian',
@@ -63,6 +65,9 @@ def fls_image(
             image_range_swath/2 in the bottom row to sensor_distance + image_range_swath/2 in the
             top row, so moving the sensor moves the window with it
         wavelength (float): when given, scatter energies are complex and sum coherently
+        water_absorption (float): two-way absorption in nepers per unit length, 0 = off
+        tvg_exponent (float): time varying gain, signals multiplied by range^n before image
+            formation, 0 = off
         ray_batch_size (int): rays per ray tracing batch; halves itself on CUDA OOM
         remaining arguments: as in sss.side_scan_image
     outputs:
@@ -84,6 +89,7 @@ def fls_image(
         n_ray_height   = num_ray_height,
         num_bounce     = num_bounce,
         second_bounce_batch_size = ray_batch_size,
+        water_absorption = water_absorption,
         octree         = octree,
     )  # list[T][1] of (R',) each
 
@@ -127,6 +133,10 @@ def fls_image(
         signals.append(torch.stack(signals_t))     # (P,Z)
     signals  = torch.stack(signals)  # (T,P,Z)
     sample_z = sample_z.squeeze(0)   # (Z,) every ping shares the one window
+
+    # time varying gain on the signal, before image formation: each sample scaled by its range^n
+    if tvg_exponent:
+        signals = signals * sample_z ** tvg_exponent  # (T,P,Z)
 
     if use_sig_magnitude:
         signals = signals.abs()  # project the envelope; a complex image is not displayable

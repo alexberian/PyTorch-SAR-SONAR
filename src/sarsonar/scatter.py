@@ -597,6 +597,7 @@ def accumulate_scatters_perspective(mesh,
                                     num_bounce = 1,
                                     second_bounce_batch_size = 2**100,
                                     surface_bias = 1e-3,
+                                    water_absorption = 0.0,
                                     debug_gif = False,
                                     octree = None,
                                 ):
@@ -618,6 +619,9 @@ def accumulate_scatters_perspective(mesh,
         surface_bias (float): distance to push each bounce's outgoing ray origin off the surface
             along the normal, to prevent self-intersection (spurious leg~=0 re-hits). Should be
             small relative to scene features but large relative to float error at the scene scale.
+        water_absorption (float): absorption coefficient of the water, in nepers per unit length
+            (0 disables it). Applied over the round trip, so it is already the two-way loss.
+            From the dB/m absorption is usually tabulated in: nepers = dB / 8.686.
         octree (Octree): a previously built octree for this mesh, built here when None. The
             octree depends only on the mesh, so a caller rendering many poses of one object
             builds it once and passes it back in instead of paying the rebuild every call
@@ -625,7 +629,8 @@ def accumulate_scatters_perspective(mesh,
     outputs:
         range (T,)[P,][R']: list of lists of 1-D tensors; R' varies per pulse (hit rays only).
             Round-trip path length, so ~2x the distance to the scatter on a first bounce
-        energy (T,)[P,][R']: list of lists of 1-D tensors; R' varies per pulse (hit rays only)
+        energy (T,)[P,][R']: list of lists of 1-D tensors; R' varies per pulse (hit rays only),
+            attenuated by water absorption over that round-trip range if enabled
         azimuth (T,)[P,][R']: list of lists of 1-D tensors; the launch azimuth in degrees off
             boresight, positive toward the sensor's right vector, of the ray that produced
             each scatter. On a second bounce that is where the ray left, not where the
@@ -634,7 +639,7 @@ def accumulate_scatters_perspective(mesh,
             scatter, i.e. where the receiver hears it from. Equal to azimuth on a first bounce;
             this is the receive beam pattern's angle
         debugging_maps: dict (t,p) -> {'depth','energy'} of (H,W) maps, or None. The energy map
-            is the raw first-bounce energy, before the ray-count normalization
+            is the raw first-bounce energy, before absorption and the ray-count normalization
     '''
     device = trajectory.device
     T = trajectory.shape[0]  # no. of camera views
@@ -690,6 +695,7 @@ def accumulate_scatters_perspective(mesh,
                 ray_origins, ray_directions,
                 wavelength       = wavelength,
                 num_bounce       = num_bounce,
+                attenuation      = water_absorption,
                 octree           = octree,
                 second_bounce_batch_size = second_bounce_batch_size,
                 surface_bias     = surface_bias,
@@ -749,7 +755,7 @@ def accumulate_scatters_side_scan(mesh,
     flies a straight track staring off to one side -- so this wrapper takes the full pose matrix
     and reads the sensor axes straight out of its columns. Azimuths are therefore measured off
     a fixed boresight, so a scatter's azimuth tells you where it sits along the track rather
-    than always being ~0. It also takes the water absorption the perspective wrapper leaves out.
+    than always being ~0.
 
     inputs:
         mesh (Mesh): the scene, with its face normals and r,a,i,d,s materials

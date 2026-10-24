@@ -7,6 +7,7 @@ Regenerate after an intended change with:  python tests/test_golden.py --record
 '''
 import sys
 
+import pytest
 import torch
 
 from sarsonar.geometry import cartesian_to_spherical, pose_matrix, spherical_to_cartesian
@@ -166,10 +167,12 @@ def test_golden_fingerprints(device):
     assert not failures, '\n'.join(failures)
 
 
-def test_perspective_matches_side_scan(device):
+@pytest.mark.parametrize('absorption', [0.0, 0.05])
+def test_perspective_matches_side_scan(device, absorption):
     '''
     The two fan wrappers are the same physics with the pose supplied rather than inferred, so handing
-    side scan the pose perspective builds for itself must give the same scatters, bit for bit.
+    side scan the pose perspective builds for itself must give the same scatters, bit for bit, with
+    water absorption off and on.
     '''
     mesh = _test_scene(device)
     az = torch.tensor([[15.0, 45.0]], device=device)
@@ -184,7 +187,8 @@ def test_perspective_matches_side_scan(device):
             poses[t, p, :3, 3] = trajectory[t, p]
 
     kwargs = dict(wavelength=0.03, fov_width_deg=30.0, fov_height_deg=30.0,
-                  n_ray_width=32, n_ray_height=32, num_bounce=2, second_bounce_batch_size=2**18)
+                  n_ray_width=32, n_ray_height=32, num_bounce=2, second_bounce_batch_size=2**18,
+                  water_absorption=absorption)
     per = accumulate_scatters_perspective(mesh, trajectory, **kwargs)
     sss = accumulate_scatters_side_scan(mesh, poses, **kwargs)
     for i in range(4):  # ranges, energies, azimuths, arrival azimuths

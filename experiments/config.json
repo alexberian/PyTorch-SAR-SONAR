@@ -97,6 +97,8 @@
         "image_range_swath": 1.2,
         "wavelength": null,
         "num_bounce": 2,
+        "water_absorption": 0.0,
+        "tvg_exponent": 0,
         // pulse FWHM 0.62/bw spans ~1.4 rows
         "spatial_bw": 32,
         "spatial_fs": 64,
