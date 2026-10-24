@@ -2,7 +2,6 @@
 The paper's spotlight SAR parameter sweeps: one stitched figure each, figures/sar_stitched_<name>.png.
 
     sphere_size            Figure "sphere size": a sphere shrinking against the resolution cell
-    wavelength             Appendix: carrier wavelength
     az_spread              Appendix: angular extent of the aperture
     num_pulse              Appendix: pulses per aperture
     snrdb                  Appendix: receiver noise
@@ -13,7 +12,7 @@ Every panel is config.json's sar_baseline with the swept keys changed, seeded al
 is the same draw.
 
     python sar_paper_figures.py                       # every sweep
-    python sar_paper_figures.py wavelength snrdb      # just these
+    python sar_paper_figures.py az_spread snrdb       # just these
     python sar_paper_figures.py -replot               # restitch the saved panels
 '''
 import numpy as np
@@ -44,13 +43,6 @@ def _sweeps():
         titles=['SNR: %.1f dB' % s for s in snr_db_vals],
     )
 
-    # carrier wavelength, magnitude-only CBP
-    wavelength_vals = [0.01, 0.05, 0.2, 0.5, 2]
-    wavelength = dict(
-        vary={'wavelength': wavelength_vals},
-        titles=['Wavelength: %.2f' % w for w in wavelength_vals],
-    )
-
     # linear vs circular at matched spreads, then the full circle only a circular track can fly
     trajectory_types = ['linear', 'circular', 'linear', 'circular', 'circular']
     trajectory_spreads = [45, 45, 135, 135, 360]
@@ -74,9 +66,8 @@ def _sweeps():
         titles=['Scale: 1', 'Scale: 1/2', 'Scale: 1/4', 'Scale: 1/8', 'Scale: 1/16'],
     )
 
-    return dict(sphere_size=sphere_size, wavelength=wavelength, az_spread=az_spread,
-                num_pulse=num_pulse, snrdb=snrdb, trajectory_type=trajectory_type,
-                trajectory_noise_var=trajectory_noise_var)
+    return dict(sphere_size=sphere_size, az_spread=az_spread, num_pulse=num_pulse, snrdb=snrdb,
+                trajectory_type=trajectory_type, trajectory_noise_var=trajectory_noise_var)
 
 
 SWEEPS = _sweeps()

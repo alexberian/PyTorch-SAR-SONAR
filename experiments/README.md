@@ -36,16 +36,17 @@ Approximate times are for one NVIDIA L40S.
 | Fig. RCS (a, b) | `calculate_rcs.py` | `rcs/rcs_flatplate_polar.png`, `rcs/rcs_polar.png` | 40 min |
 | Fig. sphere size; Appendix SAR examples | `sar_paper_figures.py` | `sar_stitched_<sweep>.png` | 2.5 h |
 | Figs. bandwidth, ray density, scatter close-up | `fsbw_and_raydensity_exp.py` | `fsbw_and_raydensity/*.png` | 1 h |
+| Fig. ray density at short wavelengths | `sar_wavelength_raydensity_exp.py` | `sar_wavelength_raydensity/sar_wavelength_raydensity.png` | 5 min |
 | Table compute time | `compute_time_experiment.py` | `compute_time_experiment.json`; LaTeX rows printed | 50 min |
 | Fig. side-scan azimuth rays; Appendix sonar beam width | `sss_paper_figures.py` | `side_scan_stitched_<sweep>.png` | 5 min |
 | Fig. sonar range density; Appendix sonar beam width | `fls_paper_figures.py` | `fls_stitched_<sweep>.png` | 10 min |
 | Fig. transmit waveform | `waveform_figure.py` | `waveform_stitched_sar_sss.png` | 12 min |
 
 Running a sweep script with no arguments renders every sweep in it. Name sweeps to render only those:
-`python sar_paper_figures.py wavelength snrdb`. `-replot` rebuilds a figure from the raw
-amplitudes saved on an earlier run, without rendering again. `fsbw_and_raydensity_exp.py` and
-`waveform_figure.py` also take `-replot`. `calculate_rcs.py` takes its map names, `plate` and
-`car`, and `-replot` the same way.
+`python sar_paper_figures.py az_spread snrdb`. `-replot` rebuilds a figure from the raw
+amplitudes saved on an earlier run, without rendering again. `fsbw_and_raydensity_exp.py`,
+`sar_wavelength_raydensity_exp.py` and `waveform_figure.py` also take `-replot`. `calculate_rcs.py`
+takes its map names, `plate` and `car`, and `-replot` the same way.
 
 `compute_time_experiment.py -quick` checks the timing harness in about a minute. The full run's
 numbers depend on the GPU and CPU.
