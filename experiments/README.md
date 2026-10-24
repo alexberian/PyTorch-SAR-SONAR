@@ -32,7 +32,8 @@ Approximate times are for one NVIDIA L40S.
 | Fig. 1 (SAR overview) | `sar_overview_figure.py` | `sar_overview/sar_overview*.png` | 2 min |
 | Fig. effective windows | `window_analysis.py` | `window_analysis_bw10_fs2000.png` | seconds |
 | Fig. materials | `convert_cvdomes.py`, then `render_cvdomes.py` | `.mp` files beside each CVDomes `.obj`; `cvdomes_materials_*.png` | 1 min |
-| Fig. validation, and the Validation numbers | `sar_validation.py` | `sar_validation.png`; numbers printed | 10 min |
+| Fig. validation, Fig. RCS (c), and the Validation numbers | `sar_validation.py` | `sar_validation.png`; numbers printed | 1 min |
+| Fig. RCS (a, b) | `calculate_rcs.py` | `rcs/rcs_flatplate_polar.png`, `rcs/rcs_polar.png` | 40 min |
 | Fig. sphere size; Appendix SAR examples | `sar_paper_figures.py` | `sar_stitched_<sweep>.png` | 2.5 h |
 | Figs. bandwidth, ray density, scatter close-up | `fsbw_and_raydensity_exp.py` | `fsbw_and_raydensity/*.png` | 1 h |
 | Table compute time | `compute_time_experiment.py` | `compute_time_experiment.json`; LaTeX rows printed | 50 min |
@@ -43,7 +44,8 @@ Approximate times are for one NVIDIA L40S.
 Running a sweep script with no arguments renders every sweep in it. Name sweeps to render only those:
 `python sar_paper_figures.py wavelength snrdb`. `-replot` rebuilds a figure from the raw
 amplitudes saved on an earlier run, without rendering again. `fsbw_and_raydensity_exp.py` and
-`waveform_figure.py` also take `-replot`.
+`waveform_figure.py` also take `-replot`. `calculate_rcs.py` takes its map names, `plate` and
+`car`, and `-replot` the same way.
 
 `compute_time_experiment.py -quick` checks the timing harness in about a minute. The full run's
 numbers depend on the GPU and CPU.
@@ -54,7 +56,8 @@ numbers depend on the GPU and CPU.
   dict, e.g. `render_sar({**SAR_BASELINE, 'wavelength': 0.05}, seed=8134)`. It also holds the sweep runner.
 * `paper_figure_layout.py` is the stitched-panel layout and the per-panel display compression.
 * `validation_point_target.py` and `validation_plate.py` are the point target and flat plate
-  harnesses that `sar_validation.py` runs.
+  harnesses that `sar_validation.py` runs. It also takes the plate's elevation cut from
+  `calculate_rcs.py`.
 
 The SAR panels seed numpy and torch before each render, so the receiver noise (`snr_db`) and
 trajectory noise come out the same on every run.

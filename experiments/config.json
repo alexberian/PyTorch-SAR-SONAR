@@ -21,7 +21,7 @@
         // the image spans sensor_distance +/- image_range_swath/2 in slant range, +/- image_cross_range_swath/2 along the track
         "image_cross_range_swath": 1.2,
         "image_range_swath": 1.2,
-        "wavelength": null,
+        "wavelength": 0.1,
         "num_bounce": 2,
         "water_absorption": 0.0,
         "tvg_exponent": 0,
@@ -46,7 +46,7 @@
         "num_pulse": 64,
         "spatial_bw": 30,
         "spatial_fs": 60,
-        "wavelength": 0.5,
+        "wavelength": 0.1,
         "waveform": "gaussian",
         "use_sig_magnitude": true,
         "snr_db": 50,
@@ -95,7 +95,7 @@
         "num_ray_height": 550,
         // rows span sensor_distance +/- image_range_swath/2; matches the side scan's, so the 20 deg fan reaches the near edge at every 20-60 deg pose
         "image_range_swath": 1.2,
-        "wavelength": null,
+        "wavelength": 0.1,
         "num_bounce": 2,
         "water_absorption": 0.0,
         "tvg_exponent": 0,

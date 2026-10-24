@@ -22,7 +22,6 @@ the squared magnitude of the coherent sum of the scatter phasors, i.e. the monos
 arbitrary units, taken *before* image formation.
 
     run_area_sweep            RCS vs plate area, expects sigma ~ A^2
-    run_glint_sweep           RCS vs aspect angle, expects the PO sinc^2 glint pattern
     run_wavelength_sweep      RCS vs wavelength, PO expects sigma ~ 1/lambda^2
     run_phase_sampling_sweep  error vs rays per phase cycle across the plate
 """
@@ -38,7 +37,7 @@ BASELINE = dict(
     plate_side=0.40,        # scene units
     elevation_deg=0.0,      # sensor elevation; 0 makes the azimuth sweep an exact in-plane rotation
     sensor_distance=1.3,
-    wavelength=0.05,        # L/lambda = 8, so the glint mainlobe is well inside the sweep
+    wavelength=0.05,        # L/lambda = 8
     grid_width=1.0,         # ray grid, held FIXED so hit count tracks plate area
     n_ray=512,
     n_subdiv=8,             # triangles per plate edge
@@ -212,85 +211,6 @@ def run_area_sweep(sides=(0.10, 0.14, 0.20, 0.28, 0.40), device='cuda', **overri
 
     slope = _loglog_slope([r['area'] for r in rows], [r['sigma'] for r in rows])
     return dict(rows=rows, slope=slope, expected_slope=2.0, cfg=cfg)
-
-
-# --------------------------------------------------------------------------------
-# glint pattern vs aspect
-# --------------------------------------------------------------------------------
-
-def _pattern_metrics(phi_deg, sigma):
-    """-3 dB width, first-null angle and peak sidelobe of an angular pattern."""
-    phi = np.asarray(phi_deg, dtype=np.float64)
-    s = np.asarray(sigma, dtype=np.float64)
-    k = int(np.argmax(s))
-    peak = s[k]
-    if peak <= 0:
-        return dict(width_deg=float('nan'), null_deg=float('nan'), pslr_db=float('nan'))
-
-    def cross(direction, level):
-        i = k
-        while 0 < i + direction < len(s) - 1:
-            j = i + direction
-            if s[j] <= level:
-                f = (s[i] - level) / (s[i] - s[j]) if s[i] != s[j] else 0.0
-                return phi[i] + f * (phi[j] - phi[i])
-            i = j
-        return float('nan')
-
-    width = abs(cross(+1, peak / 2) - cross(-1, peak / 2))       # -3 dB in power
-
-    def null(direction):
-        i = k
-        while 0 < i + direction < len(s) - 1:
-            j = i + direction
-            if s[j] > s[i]:
-                return phi[i]
-            i = j
-        return float('nan')
-
-    lo_i = int(np.argmin(np.abs(phi - null(-1))))
-    hi_i = int(np.argmin(np.abs(phi - null(+1))))
-    side = np.concatenate([s[:lo_i + 1], s[hi_i:]])
-    pslr = 10 * np.log10(side.max() / peak) if side.size else float('nan')
-    return dict(width_deg=width,
-                null_deg=0.5 * (abs(null(-1)) + abs(null(+1))),
-                pslr_db=pslr)
-
-
-def run_glint_sweep(wavelengths=(0.05, 0.025), phi_max_deg=12.0, n_angles=481,
-                    device='cuda', **overrides):
-    """
-    Sweep the sensor azimuth through specular and compare the glint pattern to PO.
-
-    With elevation 0 the azimuth offset *is* the plate's off-normal angle, so the
-    reference is the exact 1-D PO expression rather than a small-angle stand-in.
-    """
-    cfg = dict(BASELINE); cfg.update(overrides)
-    side = cfg['plate_side']
-    phi = np.linspace(-phi_max_deg, phi_max_deg, n_angles)
-
-    curves = []
-    for lam in wavelengths:
-        plate = make_plate(side, scatter_fraction=cfg['scatter_fraction'],
-                           n_subdiv=cfg['n_subdiv'], elevation_deg=cfg['elevation_deg'],
-                           device=device)
-        _, energies, _ = scatter_from_plates(
-            [plate], phi, elevation_deg=cfg['elevation_deg'],
-            sensor_distance=cfg['sensor_distance'], wavelength=lam,
-            grid_width=cfg['grid_width'], n_ray=cfg['n_ray'], device=device,
-        )
-        sigma = np.array([coherent_rcs(e) for e in energies])
-        po = po_plate_rcs(side, phi * np.pi / 180.0, lam)
-
-        m_meas = _pattern_metrics(phi, sigma)
-        m_po = _pattern_metrics(phi, po)
-        curves.append(dict(
-            wavelength=lam, phi_deg=phi, sigma=sigma, po=po,
-            measured=m_meas, reference=m_po,
-            po_null_deg=float(np.degrees(np.arcsin(min(1.0, lam / (2 * side))))),
-        ))
-
-    return dict(curves=curves, side=side, cfg=cfg)
 
 
 # --------------------------------------------------------------------------------
