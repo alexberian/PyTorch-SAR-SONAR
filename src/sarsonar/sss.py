@@ -47,20 +47,19 @@ def apply_beam_pattern(energy, tx_azimuth_deg, rx_azimuth_deg, beam_width_deg):
     Weight scatter energies by a two-way Gaussian beam: transmit at each scatter's launch azimuth,
     receive at its arrival azimuth. Runs after accumulate_scatters, which never applies a beam.
 
-    Each one-way Gaussian is sqrt(2) wider than beam_width_deg, so on a first bounce, where the two
-    azimuths agree, the product is the two-way beam of FWHM beam_width_deg.
+    Each one-way Gaussian has FWHM beam_width_deg, so on a first bounce, where the two azimuths
+    agree, the product is the two-way beam of FWHM beam_width_deg/sqrt(2).
 
     inputs:
         energy (R,): scatter energies, real or complex
         tx_azimuth_deg (R,): launch azimuth of the ray behind each scatter, off boresight, in degrees
         rx_azimuth_deg (R,): arrival azimuth of each scatter, off the same boresight, in degrees
-        beam_width_deg (float): two-way FWHM of the beam, in degrees
+        beam_width_deg (float): one-way FWHM of the beam, in degrees
     outputs:
         energy (R,): the weighted energies
     '''
-    one_way_beam_width_deg = beam_width_deg * np.sqrt(2)
-    return (energy * beam_spread_weights(tx_azimuth_deg, one_way_beam_width_deg)
-                   * beam_spread_weights(rx_azimuth_deg, one_way_beam_width_deg))
+    return (energy * beam_spread_weights(tx_azimuth_deg, beam_width_deg)
+                   * beam_spread_weights(rx_azimuth_deg, beam_width_deg))
 
 
 def side_scan_image(
@@ -101,7 +100,7 @@ def side_scan_image(
             outer columns have no ping abeam of them
         num_pings (int): pings along the track
         elevation_fov_deg (float): vertical extent of each ping's ray fan
-        azimuth_beam_width_deg (float): two-way FWHM of the along-track beam; the fan spans 3x this
+        azimuth_beam_width_deg (float): one-way FWHM of the along-track beam; the fan spans 3x this
         num_ray_width/num_ray_height (int): rays across the fan in azimuth and elevation
         image_width/image_height (int): pixels
         image_cross_range_swath (float): along-track extent of the image
@@ -161,7 +160,7 @@ def side_scan_image(
     poses[:, :3, 3] = trajectory                                                    # only the center moves
 
     # the ray fan only needs to cover the angles where the beam pattern still has weight. The
-    # Gaussian is down to ~0.002 at 1.5 beam widths off boresight, so 3 beam widths total spends
+    # one-way Gaussian is down to ~0.002 at 1.5 beam widths off boresight, so 3 beam widths total spends
     # rays where the energy actually is instead of on the tails.
     fan_azimuth_fov_deg   = azimuth_beam_width_deg * 3
     fan_elevation_fov_deg = elevation_fov_deg
